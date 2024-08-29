@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project>
+<included>
+  <springProperty scope="context" name="applicationName" source="spring.application.name" />
+  <springProfile name="default">
+    <include resource="org/springframework/boot/logging/logback/base.xml" /> 
+     <property name="CONSOLE_LOG_PATTERN"  value="%d{HH:mm:ss.SSS} [${applicationName}] [%thread] %-5level %logger{36} - %msg%n"/>
+      <property name="CONSOLE_LOG_CHARSET"  value="utf-8"/>
+    <root level="INFO">
+      <appender-ref ref="CONSOLE" />
+    </root>
+</springProfile>
+
+<springProfile name="extension">
+  <contextName>${applicationName}</contextName>   
+  <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+     <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>timestamp</fieldName>
+                </timestamp>
+                <logLevel>
+                    <fieldName>level</fieldName>
+                </logLevel>
+                <threadName>
+                    <fieldName>thread</fieldName>
+                </threadName>
+                <contextName>
+                    <fieldName>serviceName</fieldName>
+                </contextName>
+                <mdc/>
+                <arguments>
+                    <includeNonStructuredArguments>true</includeNonStructuredArguments>
+                </arguments>
+                <loggerName>
+                    <fieldName>logger</fieldName>
+                </loggerName>
+                <message>
+                    <fieldName>message</fieldName>
+                </message>
+                <throwableClassName>
+                    <fieldName>ExceptionClass</fieldName>
+                </throwableClassName>
+                <stackTrace>
+                    <fieldName>StackTrace</fieldName>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                       <maxDepthPerThrowable>200</maxDepthPerThrowable>
+                        <maxLength>5000</maxLength>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+        </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="jsonConsoleAppender" />
+  </root>
+</springProfile>
+</included>
