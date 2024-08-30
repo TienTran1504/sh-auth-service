@@ -1,4 +1,4 @@
-package com.sh.financial.auth.payload;
+package com.sh.financial.utility.web.model.res;
 
 
 import java.util.Date;

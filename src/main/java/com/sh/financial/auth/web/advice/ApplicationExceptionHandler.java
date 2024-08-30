@@ -2,7 +2,7 @@ package com.sh.financial.auth.web.advice;
 
 import com.sh.financial.auth.exception.AuthAPIException;
 import com.sh.financial.auth.exception.ResourceNotFoundException;
-import com.sh.financial.auth.payload.ErrorDetails;
+import com.sh.financial.utility.web.model.res.ErrorDetails;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
@@ -68,4 +68,6 @@ public class ApplicationExceptionHandler extends ExceptionHandlerAdvice {
     );
     return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
   }
+
+
 }

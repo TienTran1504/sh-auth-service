@@ -4,6 +4,7 @@ import com.sh.financial.auth.security.AuthenticationFilter;
 import com.sh.financial.auth.security.CustomAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
@@ -103,6 +104,7 @@ public class AppConfig {
 //  }
 
   @Bean
+  @Lazy
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> {
