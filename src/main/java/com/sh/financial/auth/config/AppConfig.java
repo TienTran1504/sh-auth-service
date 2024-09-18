@@ -1,5 +1,10 @@
 package com.sh.financial.auth.config;
 
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import com.sh.financial.auth.security.AuthenticationFilter;
 import com.sh.financial.auth.security.CustomAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +32,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -35,6 +42,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import javax.sql.DataSource;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.UUID;
 
 
 @Configuration
@@ -84,27 +96,7 @@ public class AppConfig {
 
 
 
-//  @Bean
-//  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//
-//    http.authorizeHttpRequests(configurer ->
-//            configurer
-//                    .requestMatchers("/api/private/**").permitAll()
-//                    .anyRequest().authenticated()
-//    );
-//
-//    // use HTTP Basic authentication
-//    http.httpBasic(Customizer.withDefaults());
-//
-//    // disable Cross Site Request Forgery (CSRF)
-//    // in general, not required for stateless REST APIs that use POST, PUT, DELETE and/or PATCH
-//    http.csrf(csrf -> csrf.disable());
-//
-//    return http.build();
-//  }
-
   @Bean
-  @Lazy
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> {
@@ -115,10 +107,12 @@ public class AppConfig {
                     .authenticationEntryPoint(authenticationEntryPoint)
             )
             .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
             )
             .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .httpBasic(Customizer.withDefaults());
     return http.build();
   }
+
+
 }

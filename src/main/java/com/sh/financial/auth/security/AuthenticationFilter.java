@@ -1,10 +1,12 @@
 package com.sh.financial.auth.security;
 
+import com.sh.financial.auth.web.service.JwtService;
 import com.sh.financial.utility.web.model.res.ApiResp;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,55 +23,59 @@ import java.io.IOException;
 import java.util.Base64;
 
 @Component
+@AllArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
-    private CustomUserDetailsService userDetailsService;
-    private PasswordEncoder passwordEncoder;
-    public AuthenticationFilter(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
-        this.userDetailsService = userDetailsService;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-        String[] credentials = extractCredentialsFromHeader(request);
+        //get jwt token from http request
+        String token = getTokenFromRequest(request);
+        System.out.println(SecurityContextHolder.getContext().getAuthentication());
 
-            // Extract username and password from the Authorization header
-
-            if (credentials != null) {
-                    String email = credentials[0];
-                    String password = credentials[1];
-
-                    UsernamePasswordAuthenticationToken authentication = authenticate(email, password);
-                    if (authentication != null) {
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    }
-            }
+        if(SecurityContextHolder.getContext().getAuthentication() != null){
             filterChain.doFilter(request, response);
+            System.out.println("fassalkjaslk");
+        }
+        //validate Token
 
+        if (token != null ){
+            //get username from token
+            String username = null;
+
+            try {
+                username = jwtService.decodeJwtToken(token).getSubject();
+                System.out.println("Test: " + jwtService.decodeJwtToken(token).getSubject());
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("Username: " + username);
+            //get user from database
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            //create authentication object
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
+                    );
+
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            //set authentication object to security context
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+        //continue filter execution
+        filterChain.doFilter(request, response);
     }
 
-    private String[] extractCredentialsFromHeader(HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader != null && authorizationHeader.startsWith("Basic ")) {
-            // Extract base64 encoded credentials
-            String base64Credentials = authorizationHeader.substring("Basic ".length());
-            // Decode base64 to get "username:password"
-            String credentials = new String(Base64.getDecoder().decode(base64Credentials));
-            // Split credentials into username and password
-            return credentials.split(":", 2);
+    private String getTokenFromRequest(HttpServletRequest request){
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")){
+            return bearerToken.substring(7, bearerToken.length()); // cut the "Bearer " string
         }
         return null;
-    }
 
-    private UsernamePasswordAuthenticationToken authenticate(String email, String password) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        if (userDetails == null || !passwordEncoder.matches(password, userDetails.getPassword())) {
-            return null;
-        }
-
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 }
