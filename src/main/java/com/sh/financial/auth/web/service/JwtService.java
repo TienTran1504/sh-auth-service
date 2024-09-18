@@ -26,9 +26,9 @@ import java.util.List;
 @AllArgsConstructor
 public class JwtService {
     private final JwtConstant jwtConstant;
-    public JWTClaimsSet decodeJwtToken(String token) throws Exception {
+    public JWTClaimsSet decodeJwtToken(String token, String strPublicKey) throws Exception {
 
-        RSAPublicKey publicKey = convertStringToRSAPublicKey(jwtConstant.getPublicKey());
+        RSAPublicKey publicKey = convertStringToRSAPublicKey(strPublicKey);
         // Parse the JWT token
         SignedJWT signedJWT = SignedJWT.parse(token);
 
