@@ -1,8 +1,6 @@
-package com.sh.financial.auth.config;
+package com.sh.financial.auth.web.utility;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 import org.springframework.stereotype.Component;
 
 @Component

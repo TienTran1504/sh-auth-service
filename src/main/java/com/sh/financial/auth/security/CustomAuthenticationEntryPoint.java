@@ -22,7 +22,6 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         ErrorDetails errorDetails = new ErrorDetails(
                 new Date(), authException.getMessage(), request.getRequestURL().toString()
         );
-
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json");
         response.getWriter().write(objectMapper.writeValueAsString(errorDetails));

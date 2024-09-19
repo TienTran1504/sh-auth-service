@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -62,12 +63,18 @@ public class ApplicationExceptionHandler extends ExceptionHandlerAdvice {
   }
 
   @ExceptionHandler(AuthAPIException.class)
-  public ResponseEntity<ErrorDetails> handleBlogAPIException(AuthAPIException ex, WebRequest webRequest) {
+  public ResponseEntity<ErrorDetails> handleAuthAPIException(AuthAPIException ex, WebRequest webRequest) {
     ErrorDetails errorDetails = new ErrorDetails(
             new Date(), ex.getMessage(), webRequest.getDescription(false)
     );
     return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
   }
 
-
+  @ExceptionHandler(AuthorizationDeniedException.class)
+  public ResponseEntity<ErrorDetails> handleAuthorizationDeniedException(AuthorizationDeniedException ex, WebRequest webRequest) {
+    ErrorDetails errorDetails = new ErrorDetails(
+            new Date(), ex.getMessage(), webRequest.getDescription(false)
+    );
+    return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
+  }
 }

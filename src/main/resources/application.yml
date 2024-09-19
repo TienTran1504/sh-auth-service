@@ -8,7 +8,7 @@ spring:
   mvc:
     log-resolved-exception: false
   datasource:
-    url: jdbc:mysql://${ENV_DB_HOST:localhost}:${ENV_DB_PORT:3306}/${ENV_DB_NAME:auth}
+    url: jdbc:mysql://${ENV_DB_HOST:localhost}:${ENV_DB_PORT:3306}/${ENV_DB_NAME:sh_auth}
     username: ${ENV_DB_USER:springstudent}
     password: ${ENV_DB_PASS:springstudent}
 

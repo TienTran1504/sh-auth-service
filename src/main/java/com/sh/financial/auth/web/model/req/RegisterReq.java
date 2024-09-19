@@ -26,3 +26,4 @@ public class RegisterReq {
     @Size(min = 4, message = "Password should be at least 4 characters")
     private String password;
 }
+

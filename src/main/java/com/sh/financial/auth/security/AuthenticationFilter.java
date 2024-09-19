@@ -1,7 +1,6 @@
 package com.sh.financial.auth.security;
 
 import com.sh.financial.auth.web.service.JwtService;
-import com.sh.financial.utility.web.model.res.ApiResp;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,13 +9,10 @@ import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -25,7 +21,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Base64;
 
 @Component
 @AllArgsConstructor
@@ -42,15 +37,16 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         System.out.println(SecurityContextHolder.getContext().getAuthentication());
 
         if(SecurityContextHolder.getContext().getAuthentication() != null){
+            System.out.println("Already authenticated");
             filterChain.doFilter(request, response);
-            System.out.println("fassalkjaslk");
-        }
-
-        if (token != null){
+        } else if (token != null){
+            System.out.println("Token found");
             String subject = null;
             try {
-                String stringPrivateKey = getPrivateKeyFromAuthServer("http://localhost:8080/authorize/token", token);
-                subject = jwtService.decodeJwtToken(token, stringPrivateKey).getSubject();
+                String publicKey = getPublicKeyFromAuthServer("http://localhost:8080/authorize/token", token);
+//                String publicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvJ1A2jb4jIqHVeGXp" +
+//                        "+dxIJxgpkNvbUxFW7mfHPHaqqaz6gcx81CZJxDj7ewm+pzxB6bA7JhByg5AtKUhMHeWUNJBUJqAOlWBWyYVWTBcOYBmwjNfbo/jWHneZyjnDUKRPpewEItfQ8D1aeMw45P3uJGUFyLXBIx88ok7a8pX+0Jz2K/Q+PrFLvVMRmtoV40e28hqA7pUMlhS3t0aZ5MmHJyJkJEA4cil2H6lwFDKQYfQkHLWjYdUhWkv6/2wX8HsHxCTKqpSO3EPBL8kIoZ3TGSkwfYoHF/GfzloOII2z4mlC3i+R+YktR70TDWTWQWLWhlV23+D2o/XK39xxByTBQIDAQAB";
+                subject = jwtService.decodeJwtToken(token, publicKey).getSubject();
                 System.out.println("subject------" + subject);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -68,7 +64,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String getPrivateKeyFromAuthServer(String tokenUrl, String bearerToken) {
+    private String getPublicKeyFromAuthServer(String tokenUrl, String bearerToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/x-www-form-urlencoded");
         headers.set("Authorization", "Bearer " + bearerToken);
@@ -86,13 +82,13 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 String privateKey = response.getBody();
-                logger.info("Private Key retrieved: {}", privateKey);
+                logger.info("Public Key retrieved: {}", privateKey);
                 return privateKey;
             } else {
-                logger.error("Failed to retrieve private key, status code: {}", response.getStatusCode());
+                logger.error("Failed to retrieve public key, status code: {}", response.getStatusCode());
             }
         } catch (Exception e) {
-            logger.error("Exception occurred while retrieving private key: {}", e.getMessage());
+            logger.error("Exception occurred while retrieving public key: {}", e.getMessage());
         }
         return null;
     }

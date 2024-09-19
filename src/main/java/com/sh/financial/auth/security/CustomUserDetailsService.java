@@ -13,8 +13,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,16 +21,16 @@ import java.util.stream.Collectors;
 public class CustomUserDetailsService implements UserDetailsService {
     private ClientRepository clientRepository;
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String clientId) throws UsernameNotFoundException {
 
-        Client client = clientRepository.findByClientId(username);
+        Client client = clientRepository.findByClientId(clientId);
         if(client == null){
             throw new AuthAPIException(HttpStatus.NOT_FOUND, "client Not Found");
         }
 
-                Set<GrantedAuthority> authorities = client.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toSet());
+        Set<GrantedAuthority> authorities = client.getRoles().stream()
+        .map(role -> new SimpleGrantedAuthority(role.getName()))
+        .collect(Collectors.toSet());
 
         return new org.springframework.security.core.userdetails.User(
                 client.getClientId(), client.getClientSecret(), authorities
