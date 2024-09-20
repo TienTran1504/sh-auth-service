@@ -2,8 +2,10 @@ package com.sh.financial.auth.security;
 
 
 import com.sh.financial.auth.entity.Client;
+import com.sh.financial.auth.entity.User;
 import com.sh.financial.auth.exception.AuthAPIException;
 import com.sh.financial.auth.repository.ClientRepository;
+import com.sh.financial.auth.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,22 +21,24 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
-    private ClientRepository clientRepository;
+    private UserRepository userRepository;
     @Override
-    public UserDetails loadUserByUsername(String clientId) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        Client client = clientRepository.findByClientId(clientId);
-        if(client == null){
-            throw new AuthAPIException(HttpStatus.NOT_FOUND, "client Not Found");
+        User user = userRepository.findByEmail(email);
+        if(user == null){
+            throw new AuthAPIException(HttpStatus.NOT_FOUND, "User Not Found");
         }
 
-        Set<GrantedAuthority> authorities = client.getRoles().stream()
+        Set<GrantedAuthority> authorities = user.getRoles().stream()
         .map(role -> new SimpleGrantedAuthority(role.getName()))
         .collect(Collectors.toSet());
 
         return new org.springframework.security.core.userdetails.User(
-                client.getClientId(), client.getClientSecret(), authorities
+                user.getEmail(), user.getPassword(), authorities
         );
+
+
     }
 
 }

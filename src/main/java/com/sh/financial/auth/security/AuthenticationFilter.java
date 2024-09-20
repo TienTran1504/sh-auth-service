@@ -41,24 +41,23 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } else if (token != null){
             System.out.println("Token found");
-            String subject = null;
+            String username = null;
             try {
-                String publicKey = getPublicKeyFromAuthServer("http://localhost:8080/authorize/token", token);
-//                String publicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvJ1A2jb4jIqHVeGXp" +
-//                        "+dxIJxgpkNvbUxFW7mfHPHaqqaz6gcx81CZJxDj7ewm+pzxB6bA7JhByg5AtKUhMHeWUNJBUJqAOlWBWyYVWTBcOYBmwjNfbo/jWHneZyjnDUKRPpewEItfQ8D1aeMw45P3uJGUFyLXBIx88ok7a8pX+0Jz2K/Q+PrFLvVMRmtoV40e28hqA7pUMlhS3t0aZ5MmHJyJkJEA4cil2H6lwFDKQYfQkHLWjYdUhWkv6/2wX8HsHxCTKqpSO3EPBL8kIoZ3TGSkwfYoHF/GfzloOII2z4mlC3i+R+YktR70TDWTWQWLWhlV23+D2o/XK39xxByTBQIDAQAB";
-                subject = jwtService.decodeJwtToken(token, publicKey).getSubject();
-                System.out.println("subject------" + subject);
+                //String publicKey = getPublicKeyFromAuthServer("http://localhost:8080/authorize/token", token);
+                String publicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvJ1A2jb4jIqHVeGXp" +
+                        "+dxIJxgpkNvbUxFW7mfHPHaqqaz6gcx81CZJxDj7ewm+pzxB6bA7JhByg5AtKUhMHeWUNJBUJqAOlWBWyYVWTBcOYBmwjNfbo/jWHneZyjnDUKRPpewEItfQ8D1aeMw45P3uJGUFyLXBIx88ok7a8pX+0Jz2K/Q+PrFLvVMRmtoV40e28hqA7pUMlhS3t0aZ5MmHJyJkJEA4cil2H6lwFDKQYfQkHLWjYdUhWkv6/2wX8HsHxCTKqpSO3EPBL8kIoZ3TGSkwfYoHF/GfzloOII2z4mlC3i+R+YktR70TDWTWQWLWhlV23+D2o/XK39xxByTBQIDAQAB";
+                username = jwtService.decodeJwtToken(token, publicKey).getSubject();
+                System.out.println("username------" + username);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(subject);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities()
                     );
 
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         filterChain.doFilter(request, response);

@@ -3,12 +3,14 @@ package com.sh.financial.auth.web.advice;
 import com.sh.financial.auth.exception.AuthAPIException;
 import com.sh.financial.auth.exception.ResourceNotFoundException;
 import com.sh.financial.utility.web.model.res.ErrorDetails;
+import jakarta.servlet.ServletException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,6 +24,7 @@ import com.sh.financial.utility.web.advice.ExceptionHandlerAdvice;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.util.Date;
 
 @Slf4j
@@ -53,7 +56,6 @@ public class ApplicationExceptionHandler extends ExceptionHandlerAdvice {
     return error(ApplicationErrorCode.INVALID_HTTP_REQUEST_RESOURCE, e.getResourcePath());
   }
 
-  //handle specific exceptions
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<ErrorDetails> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest webRequest) {
     ErrorDetails errorDetails = new ErrorDetails(
@@ -77,4 +79,22 @@ public class ApplicationExceptionHandler extends ExceptionHandlerAdvice {
     );
     return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
   }
+
+  @ExceptionHandler(UsernameNotFoundException.class)
+  public ResponseEntity<ErrorDetails> handleUsernameNotFoundException(HttpServletRequest request, UsernameNotFoundException e) {
+    ErrorDetails errorDetails = new ErrorDetails(new Date(), e.getMessage(), request.getRequestURI());
+    return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(ServletException.class)
+  public ResponseEntity<ErrorDetails> handleServletException(HttpServletRequest request, ServletException e) {
+      ErrorDetails errorDetails = new ErrorDetails(new Date(), e.getMessage(), request.getRequestURI());
+      return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(IOException.class)
+    public ResponseEntity<ErrorDetails> handleExceptionIO(HttpServletRequest request, IOException e) {
+        ErrorDetails errorDetails = new ErrorDetails(new Date(), e.getMessage(), request.getRequestURI());
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
 }

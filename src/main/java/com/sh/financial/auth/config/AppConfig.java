@@ -83,7 +83,7 @@ public class AppConfig {
                     .authenticationEntryPoint(authenticationEntryPoint)
             )
             .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
             )
             .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .httpBasic(Customizer.withDefaults());
