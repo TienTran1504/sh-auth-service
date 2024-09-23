@@ -77,13 +77,16 @@ public class AppConfig {
     http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> {
               auth.requestMatchers("/api/private/**").permitAll();
+              auth.requestMatchers("/api/public/message2").hasRole("MANAGER");
+              auth.requestMatchers("/api/public/message3").hasRole("ADMIN");
+              auth.requestMatchers("/api/public/message4").hasAnyRole("ADMIN", "USER");
               auth.anyRequest().authenticated();
             })
             .exceptionHandling(exception -> exception
                     .authenticationEntryPoint(authenticationEntryPoint)
             )
             .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .httpBasic(Customizer.withDefaults());

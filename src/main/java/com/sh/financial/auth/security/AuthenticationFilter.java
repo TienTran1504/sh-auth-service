@@ -1,5 +1,6 @@
 package com.sh.financial.auth.security;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.sh.financial.auth.web.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,9 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -21,44 +23,60 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Component
 @AllArgsConstructor
 public class AuthenticationFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
         String token = getTokenFromRequest(request);
-        System.out.println(SecurityContextHolder.getContext().getAuthentication());
-
-        if(SecurityContextHolder.getContext().getAuthentication() != null){
-            System.out.println("Already authenticated");
-            filterChain.doFilter(request, response);
-        } else if (token != null){
+        System.out.println("Before Set context: " + SecurityContextHolder.getContext().getAuthentication());
+        if (token != null){
             System.out.println("Token found");
             String username = null;
+            JWTClaimsSet payload = null;
+
             try {
                 //String publicKey = getPublicKeyFromAuthServer("http://localhost:8080/authorize/token", token);
                 String publicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvJ1A2jb4jIqHVeGXp" +
                         "+dxIJxgpkNvbUxFW7mfHPHaqqaz6gcx81CZJxDj7ewm+pzxB6bA7JhByg5AtKUhMHeWUNJBUJqAOlWBWyYVWTBcOYBmwjNfbo/jWHneZyjnDUKRPpewEItfQ8D1aeMw45P3uJGUFyLXBIx88ok7a8pX+0Jz2K/Q+PrFLvVMRmtoV40e28hqA7pUMlhS3t0aZ5MmHJyJkJEA4cil2H6lwFDKQYfQkHLWjYdUhWkv6/2wX8HsHxCTKqpSO3EPBL8kIoZ3TGSkwfYoHF/GfzloOII2z4mlC3i+R+YktR70TDWTWQWLWhlV23+D2o/XK39xxByTBQIDAQAB";
-                username = jwtService.decodeJwtToken(token, publicKey).getSubject();
+
+                payload = jwtService.decodeJwtToken(token, publicKey);
+                username = payload.getSubject();
                 System.out.println("username------" + username);
+                System.out.println("payload------" + payload);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            Set<GrantedAuthority> authorities = new HashSet<>();
+
+            List<Map<String, String>> roles = (List<Map<String, String>>) payload.getClaim("roles");
+
+            roles.stream()
+                    .map(role -> new SimpleGrantedAuthority(role.get("authority")))
+                    .forEach(authorities::add);
+
+            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                    username, "N/A", authorities
+            );
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities()
                     );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            System.out.println("After Set context: " + SecurityContextHolder.getContext().getAuthentication());
         }
         filterChain.doFilter(request, response);
     }

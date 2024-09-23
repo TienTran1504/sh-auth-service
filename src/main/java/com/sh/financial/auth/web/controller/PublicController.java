@@ -16,16 +16,21 @@ PublicController {
     }
 
     @RequestMapping("/message2")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> getMessage2() {
+
+        return ResponseEntity.ok("Hello USER");
+    }
+
+    @RequestMapping("/message3")
+    public ResponseEntity<String> getMessage3() {
 
         return ResponseEntity.ok("Hello ADMIN");
     }
 
-    @RequestMapping("/message3")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<String> getMessage3() {
 
-        return ResponseEntity.ok("Hello USER");
+    @RequestMapping("/message4")
+    public ResponseEntity<String> getMessage4() {
+
+        return ResponseEntity.ok("Hello ADMIN or User");
     }
 }
